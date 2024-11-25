@@ -16,7 +16,7 @@ network_check
 update_os
 
 msg_info "Installing Dependencies"
-$STD apt-get install -y {curl,sudo,mc,jq}
+$STD apt-get install -y {curl,jq}
 msg_ok "Installed Dependencies"
 
 RELEASE=$(curl -s https://api.github.com/repos/VictoriaMetrics/VictoriaMetrics/releases/latest | jq -r '.tag_name')
@@ -34,17 +34,7 @@ echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
 msg_ok "Installed VictoriaMetrics"
 
 msg_info "Creating Config"
-mkdir -p /etc/victoriametrics
-mkdir -p /var/lib/victoria-metrics-data
-cat <<EOF >/etc/victoriametrics/scrape.yml
-# Scrape config example
-#
-scrape_configs:
-  - job_name: self_scrape
-    scrape_interval: 10s
-    static_configs:
-      - targets: ['127.0.0.1:8428']
-EOF
+mkdir -p /storage
 
 msg_info "Creating Services"
 mkdir -p /etc/systemd/system
@@ -55,19 +45,14 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/var/lib/victoria-metrics-data
-StartLimitBurst=5
-StartLimitInterval=0
-Restart=on-failure
-RestartSec=5
-ExecStart=/opt/victoria-metrics-prod --promscrape.config=/etc/victoriametrics/scrape.yml --storageDataPath=/var/lib/victoria-metrics-data --retentionPeriod=12 --httpListenAddr=:8428 --graphiteListenAddr=:2003 --opentsdbListenAddr=:4242 --influxListenAddr=:8089 --enableTCP6
+WorkingDirectory=/storage
+ExecStart=/opt/victoria-metrics-prod --storageDataPath=/storage --retentionPeriod=12 --httpListenAddr=:8428 --graphiteListenAddr=:2003 --opentsdbListenAddr=:4242 --influxListenAddr=:8089
 SyslogIdentifier=victoriametrics
 
 [Install]
 WantedBy=multi-user.target
 EOF
 systemctl enable -q --now victoriametrics
-sleep 3
 msg_ok "Created Service"
 
 motd_ssh

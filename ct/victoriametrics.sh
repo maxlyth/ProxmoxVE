@@ -21,9 +21,9 @@ header_info
 echo -e "Loading..."
 APP="VictoriaMetrics"
 SVC="victoriametrics"
-var_disk="24"
+var_disk="4"
 var_cpu="1"
-var_ram="1024"
+var_ram="512"
 var_os="debian"
 var_version="12"
 variables
@@ -68,6 +68,6 @@ build_container
 description
 
 msg_ok "Completed Successfully!\n"
-echo -e "Configuration files are located in ${YWB}/etc/victoriametrics/${CL}. \n"
+echo -e "Storage files are located in ${YWB}/storage/${CL}. \n"
 echo -e "${APP} web UI should be reachable by going to the following URL.
          ${BL}http://${IP}:8428/vmui${CL} \n"
