@@ -45,15 +45,11 @@ scrape_configs:
     static_configs:
       - targets: ['127.0.0.1:8428']
 EOF
-cat <<EOF >/etc/victoriametrics/victoriametrics.conf
-ARGS="-promscrape.config=/etc/victoriametrics/scrape.yml -storageDataPath=/var/lib/victoria-metrics-data -retentionPeriod=12 -httpListenAddr=:8428 -graphiteListenAddr=:2003 -opentsdbListenAddr=:4242 -influxListenAddr=:8089 -enableTCP6"
-EOF
 
 msg_info "Creating Services"
+mkdir -p /etc/systemd/system
 cat <<EOF >/etc/systemd/system/victoriametrics.service
 [Unit]
-Description=VictoriaMetrics is a fast, cost-effective and scalable monitoring solution and time series database.
-# https://docs.victoriametrics.com
 After=network.target
 
 [Service]
@@ -64,17 +60,7 @@ StartLimitBurst=5
 StartLimitInterval=0
 Restart=on-failure
 RestartSec=5
-EnvironmentFile=-/etc/victoriametrics/victoriametrics.conf
-ExecStart=/opt/victoria-metrics-prod $ARGS
-ExecStop=/bin/kill -s SIGTERM $MAINPID
-ExecReload=/bin/kill -HUP $MAINPID
-# See docs https://docs.victoriametrics.com/single-server-victoriametrics/#tuning
-ProtectSystem=full
-LimitNOFILE=1048576
-LimitNPROC=1048576
-LimitCORE=infinity
-StandardOutput=syslog
-StandardError=syslog
+ExecStart=/opt/victoria-metrics-prod --promscrape.config=/etc/victoriametrics/scrape.yml --storageDataPath=/var/lib/victoria-metrics-data --retentionPeriod=12 --httpListenAddr=:8428 --graphiteListenAddr=:2003 --opentsdbListenAddr=:4242 --influxListenAddr=:8089 --enableTCP6
 SyslogIdentifier=victoriametrics
 
 [Install]
