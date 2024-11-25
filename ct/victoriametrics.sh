@@ -20,10 +20,9 @@ EOF
 header_info
 echo -e "Loading..."
 APP="VictoriaMetrics"
-SVC="victoriametrics"
-var_disk="4"
+var_disk="16"
 var_cpu="1"
-var_ram="512"
+var_ram="768"
 var_os="debian"
 var_version="12"
 variables
@@ -58,8 +57,26 @@ function update_script() {
   header_info
   check_container_storage
   check_container_resources
-  if [[ ! -f /etc/systemd/system/${SVC}.service ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
-  msg_error "To update ${APP}, create a new container and transfer your data."
+  if [[ ! -f /etc/systemd/system/victoriametrics.service ]]; then msg_error "No ${APP} Installation Found!"; exit; fi
+
+  RELEASE=$(curl -s https://api.github.com/repos/VictoriaMetrics/VictoriaMetrics/releases/latest | jq -r '.tag_name')
+  if [[ ! -f /opt/${APP}_version.txt ]] || [[ "${RELEASE}" != "$(cat /opt/${APP}_version.txt)" ]]; then
+
+    msg_info "Updating ${APP} to ${RELEASE}"
+    cd /opt
+    wget -q https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/$RELEASE/victoria-metrics-linux-amd64-$RELEASE.tar.gz
+    gunzip -q victoria-metrics-linux-amd64-$RELEASE.tar.gz
+    tar -xf victoria-metrics-linux-amd64-$RELEASE.tar
+    chmod +x victoria-metrics-prod
+    wget -q https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/$RELEASE/vmutils-linux-amd64-$RELEASE.tar.gz
+    gunzip -q vmutils-linux-amd64-$RELEASE.tar.gz
+    tar -xf vmutils-linux-amd64-$RELEASE.tar
+    chmod +x vm*-prod
+    echo "${RELEASE}" >/opt/${APP}_version.txt
+    msg_ok "Updated ${APP} to ${RELEASE}"
+  else
+    msg_ok "No update required. ${APP} is already at ${RELEASE}"
+  fi
   exit
 }
 
@@ -68,6 +85,6 @@ build_container
 description
 
 msg_ok "Completed Successfully!\n"
-echo -e "Storage files are located in ${YWB}/storage/${CL}. \n"
+echo -e "Data files are located in ${YWB}/storage/${CL}. \n"
 echo -e "${APP} web UI should be reachable by going to the following URL.
          ${BL}http://${IP}:8428/vmui${CL} \n"

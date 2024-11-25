@@ -20,7 +20,7 @@ $STD apt-get install -y {curl,jq}
 msg_ok "Installed Dependencies"
 
 RELEASE=$(curl -s https://api.github.com/repos/VictoriaMetrics/VictoriaMetrics/releases/latest | jq -r '.tag_name')
-msg_info "Installing VictoriaMetrics $RELEASE"
+msg_info "Installing ${APPLICATION} ${RELEASE}"
 cd /opt
 wget -q https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/$RELEASE/victoria-metrics-linux-amd64-$RELEASE.tar.gz
 gunzip -q victoria-metrics-linux-amd64-$RELEASE.tar.gz
@@ -31,7 +31,7 @@ gunzip -q vmutils-linux-amd64-$RELEASE.tar.gz
 tar -xf vmutils-linux-amd64-$RELEASE.tar
 chmod +x vm*-prod
 echo "${RELEASE}" >/opt/${APPLICATION}_version.txt
-msg_ok "Installed VictoriaMetrics"
+msg_ok "Installed ${APPLICATION} ${RELEASE}"
 
 msg_info "Creating Config"
 mkdir -p /storage
